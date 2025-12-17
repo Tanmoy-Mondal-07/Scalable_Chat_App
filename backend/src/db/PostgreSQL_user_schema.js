@@ -13,9 +13,9 @@ async function createUserTable() {
 
     try {
         await pool.query(query);
-        console.log("Table created");
+        console.log("✅ PostgreSQL Table created");
     } catch (err) {
-        console.error("migration error ::", err);
+        console.error("❌ PostgreSQL migration error ::", err);
         await pool.end();
         process.exit(1)
     }

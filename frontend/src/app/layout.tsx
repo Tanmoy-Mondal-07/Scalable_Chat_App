@@ -3,8 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TopNavbar from "@/components/TopNavbar"
 import { ThemeProvider } from "@/components/theme-provider"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import { SocketProvider } from "../lib/SocketProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,32 +29,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      <SocketProvider>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <SidebarProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <SidebarProvider>
 
-            <div className="flex min-h-screen w-full">
-              <AppSidebar />
+              <div className="flex min-h-screen w-full">
+                <AppSidebar />
 
-              <div className="flex flex-1 flex-col">
-                <TopNavbar />
+                <div className="flex flex-1 flex-col">
+                  <TopNavbar />
 
-                <main className="flex-1 overflow-auto p-4">
-                  {children}
-                </main>
+                  <main className="flex-1 overflow-auto p-4">
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
 
-          </SidebarProvider>
-        </ThemeProvider>
-      </body>
+            </SidebarProvider>
+          </ThemeProvider>
+        </body>
+      </SocketProvider>
     </html>
   );
 }

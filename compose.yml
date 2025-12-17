@@ -1,9 +1,21 @@
-
 services:
+  redis:
+    image: redis:alpine
+    container_name: redis
+    command: [ "redis-server", "--requirepass", "clash" ]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "clash", "PING" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chat-app
+
   postgres:
     image: postgres:16
     container_name: postgres_db
-    # restart: unless-stopped
     environment:
       POSTGRES_USER: clash
       POSTGRES_PASSWORD: clash
@@ -15,35 +27,52 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       interval: 10s
-      timeout: 30s
+      timeout: 5s
       retries: 5
-    attach: false
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  
-  redis:
-    image: redis:alpine
-    container_name: redis
-    # restart: unless-stopped
-    command: ["redis-server", "--requirepass", "clash"]
+
+  cassandra-node-1:
+    image: cassandra:4.1
+    container_name: cassandra-node-1
+    hostname: cassandra-node-1
     ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "clash", "PING"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      - "9042:9042" # CQL
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MyCluster"
+      CASSANDRA_DC: "dc1"
+      CASSANDRA_RACK: "rack1"
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_SEEDS: "cassandra-node-1"
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
     volumes:
-      - redis_data:/data
+      - cassandra1-data:/var/lib/cassandra
+    networks:
+      - chat-app
+
+  cassandra-node-2:
+    image: cassandra:4.1
+    container_name: cassandra-node-2
+    hostname: cassandra-node-2
+    depends_on:
+      - cassandra-node-1
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MyCluster"
+      CASSANDRA_DC: "dc1"
+      CASSANDRA_RACK: "rack1"
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_SEEDS: "cassandra-node-1"
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    volumes:
+      - cassandra2-data:/var/lib/cassandra
     networks:
       - chat-app
 
   redis_insight:
     image: redis/redisinsight:latest
     container_name: redis_insight
-    # restart: unless-stopped
-    depends_on:
-      - redis
     ports:
       - "5540:5540"
     networks:
@@ -64,26 +93,11 @@ services:
       - chat-app
     attach: false
 
-  # minio:
-  #   image: minio/minio
-  #   container_name: minio
-  #   environment:
-  #     MINIO_ROOT_USER: admin
-  #     MINIO_ROOT_PASSWORD: admin123
-  #   command: server /data --console-address ":9001"
-  #   ports:
-  #     - "9000:9000" # S3 API
-  #     - "9001:9001" # Web Console
-  #   networks:
-  #     - chat-app
-  #   volumes:
-  #     - minio_data:/data
-
 networks:
   chat-app:
 
 
 volumes:
   postgres_data:
-  redis_data:
-  # minio_data:
+  cassandra1-data:
+  cassandra2-data:

@@ -1,18 +1,24 @@
 import dotenv from "dotenv";
-import connectDB from "./db/index.js";
 import { app } from "./app.js";
-import createUserTable from "./db/create_user_tables.js";
+import createUserTable from "./db/PostgreSQL_user_schema.js";
+import http from "http";
+import SocketService from "./services/socket.js";
+import initCassandra from "./db/Cassandra_chat_schema.js";
 
 dotenv.config({
   path: './.env'
 });
 
-connectDB().then(()=>createUserTable())
+const server = http.createServer(app);
+const socketService = new SocketService(server);
+await initCassandra();
+
+createUserTable()
   .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
-      console.log("Server is running at port", process.env.PORT || 8000);
+    server.listen(process.env.PORT || 8000, () => {
+      console.log("Server running on port", process.env.PORT || 8000);
     });
   })
   .catch((err) => {
-    console.log("MongoDB connection failed in src/index.js:", err);
+    console.error("DB connection failed:", err);
   });

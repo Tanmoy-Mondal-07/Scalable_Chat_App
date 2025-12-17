@@ -3,9 +3,78 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import redis from "../db/redis.js";
 
-export async function getAllUsers() {
-    const responce = await pool.query("SELECT * FROM users")
-    return responce.rows;
+export async function getAllUsers(offset) {
+    const response = await pool.query(
+        "SELECT * FROM users ORDER BY id LIMIT 50 OFFSET $1",
+        [offset]
+    )
+
+    const users = response.rows.map(({ password_hash, ...userData }) => userData)
+
+    const pipeline = redis.pipeline()
+    for (const user of users) {
+        pipeline.set(
+            `profile:${user.id}`,
+            JSON.stringify(user),
+            "EX",
+            10 * 24 * 60 * 60
+        )
+    }
+    await pipeline.exec()
+
+    return users
+}
+
+export async function fetchUsersInBulkById(ids) {
+    if (!ids.length) return []
+
+    const keys = ids.map(id => `profile:${id}`)
+    const cachedResults = await redis.mget(...keys)
+
+    const usersFromCache = []
+    const missingIds = []
+
+    cachedResults.forEach((value, index) => {
+        if (value) {
+            usersFromCache.push(JSON.parse(value))
+        } else {
+            missingIds.push(ids[index])
+        }
+    })
+
+    let usersFromDb = []
+
+    if (missingIds.length) {
+        const response = await pool.query(
+            `SELECT * FROM users WHERE id = ANY($1::int[])`,
+            [missingIds]
+        )
+
+        usersFromDb = response.rows.map(
+            ({ password_hash, ...user }) => user
+        )
+
+        const pipeline = redis.pipeline()
+
+        for (const user of usersFromDb) {
+            pipeline.set(
+                `profile:${user.id}`,
+                JSON.stringify(user),
+                "EX",
+                10 * 24 * 60 * 60
+            )
+        }
+
+        await pipeline.exec()
+    }
+
+    const userMap = new Map()
+
+    for (const user of [...usersFromCache, ...usersFromDb]) {
+        userMap.set(user.id, user)
+    }
+
+    return ids.map(id => userMap.get(id)).filter(Boolean)
 }
 
 export async function getUserById(id) {

@@ -60,6 +60,7 @@ export default function Page() {
                 username,
                 password
             })
+            console.log(data);
             if (data.success) {
                 await axiosInstance.post('/users/login', {
                     identifier: email,

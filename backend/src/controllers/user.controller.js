@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from 'jsonwebtoken'
-import { createUser, encriptPassword, generateAccessToken, generateRefreshToken, getUserByEmailIdOrUsername, getUserById, getUserByIdentifier, getUserByIdThroughRedisCache, isPasswordCorrect } from "../models/user.model.js";
+import { createUser, encriptPassword, fetchUsersInBulkById, generateAccessToken, generateRefreshToken, getAllUsers, getUserByEmailIdOrUsername, getUserById, getUserByIdentifier, getUserByIdThroughRedisCache, isPasswordCorrect } from "../models/user.model.js";
 import redis from "../db/redis.js";
 
 
@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
         hashedPassword,
         username,
     })
-    console.log(user);
+    // console.log(user);
 
     const createdUser = await getUserById(user.id)
 
@@ -193,10 +193,63 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
     }
 })
 
+const getUsersWithPagination = asyncHandler(async (req, res) => {
+    const offset = req.body.offset
+
+    if (!offset && Number.isInteger(offset)) {
+        throw new ApiError(404, "offset id required and its must be a Intiger")
+    }
+
+    try {
+        const user = await getAllUsers(offset)
+
+        if (!user || user.length === 0) {
+            throw new ApiError(404, "no user found")
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, user, "50 Users List, shorted by Id"))
+    } catch (error) {
+        throw new ApiError(500, error?.message || "Users List not found")
+    }
+})
+
+const getUsersWithIdsInBulk = asyncHandler(async (req, res) => {
+    const idarray = req.body.idarray
+
+    if (!idarray && idarray.length !== 0) {
+        throw new ApiError(404, "id array is required")
+    }
+
+    const ids = idarray
+        .filter(id =>
+            Number.isInteger(id) ||
+            (typeof id === "string" && /^\d+$/.test(id))
+        )
+        .map(String)
+
+    try {
+        const user = await fetchUsersInBulkById(ids)
+
+        if (!user || user.length === 0) {
+            throw new ApiError(404, "invalid user Ids")
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, user, "Users List"))
+    } catch (error) {
+        throw new ApiError(500, error?.message || "Users List not found")
+    }
+})
+
 export {
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
-    getUserProfileDetails
+    getUserProfileDetails,
+    getUsersWithPagination,
+    getUsersWithIdsInBulk
 }
