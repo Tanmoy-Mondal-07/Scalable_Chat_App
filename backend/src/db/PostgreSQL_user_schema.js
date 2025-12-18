@@ -1,4 +1,4 @@
-import pool from "./pool.js";
+import pool from "./PostgreSQL.client.js";
 
 async function createUserTable() {
     const query = `

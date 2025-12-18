@@ -1,7 +1,7 @@
-import pool from "../db/pool.js"
+import pool from "../db/PostgreSQL.client.js"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
-import redis from "../db/redis.js";
+import redis from "../db/Redis.client.js";
 
 export async function getAllUsers(offset) {
     const response = await pool.query(

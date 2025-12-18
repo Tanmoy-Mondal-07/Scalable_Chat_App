@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import socketAuth from "../middlewares/socket.middleware.js";
-import redis from "../db/redis.js";
+import redis from "../db/Redis.client.js";
 
 class SocketService {
     constructor(httpServer) {

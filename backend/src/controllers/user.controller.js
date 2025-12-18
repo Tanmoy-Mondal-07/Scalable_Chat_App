@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from 'jsonwebtoken'
 import { createUser, encriptPassword, fetchUsersInBulkById, generateAccessToken, generateRefreshToken, getAllUsers, getUserByEmailIdOrUsername, getUserById, getUserByIdentifier, getUserByIdThroughRedisCache, isPasswordCorrect } from "../models/user.model.js";
-import redis from "../db/redis.js";
+import redis from "../db/Redis.client.js";
 
 
 const generateAccessAndRefreshTokens = async (user) => {
