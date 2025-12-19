@@ -2,6 +2,8 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import socketAuth from "../middlewares/socket.middleware.js";
 import redis from "../db/Redis.client.js";
+// import { producer } from "../db/Kafka.client.js";
+// import { v4 as uuid } from "uuid";
 
 class SocketService {
     constructor(httpServer) {
@@ -48,6 +50,30 @@ class SocketService {
                 });
             });
         });
+
+        // this.io.on("connection", (socket) => {
+        //     socket.on("send_message", async (payload) => {
+        //         const message = {
+        //             message_id: uuid(),
+        //             conversation_id: payload.conversationId,
+        //             sender_id: socket.id,
+        //             content: payload.text,
+        //             ts: Date.now()
+        //         };
+
+        //         await producer.send({
+        //             topic: "chat_messages",
+        //             messages: [
+        //                 {
+        //                     key: message.conversation_id, // ORDERING GUARANTEE
+        //                     value: JSON.stringify(message)
+        //                 }
+        //             ]
+        //         });
+
+        //         socket.emit("ack", { message_id: message.message_id });
+        //     });
+        // });
     }
 }
 

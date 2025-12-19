@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "./authStore";
 
 export const axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BACKEND_API,
@@ -16,9 +17,11 @@ axiosInstance.interceptors.response.use(
                     {},
                     { withCredentials: true }
                 );
+                useAuthStore.getState().setUser(response.data.data.user)
                 return axiosInstance(originalRequest); // Retry the original request with the new access token.
             } catch (refreshError) {
                 console.error('Token refresh failed:', refreshError);
+                useAuthStore.getState().clearUser()
                 window.location.href = '/signin';
                 return Promise.reject(refreshError);
             }

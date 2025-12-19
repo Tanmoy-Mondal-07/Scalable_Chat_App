@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import axios, { AxiosError } from "axios"
 import { axiosInstance } from "@/lib/api"
+import { useAuthStore } from "@/lib/authStore"
 
 export default function Page() {
     const router = useRouter()
     const id = crypto.randomUUID()
+    const setUser = useAuthStore.getState().setUser;
 
     const [username, setUsername] = useState(id)
     const [email, setEmail] = useState(`${id}@gmail.com`)
@@ -62,10 +64,12 @@ export default function Page() {
             })
             console.log(data);
             if (data.success) {
-                await axiosInstance.post('/users/login', {
+                const { data } = await axiosInstance.post('/users/login', {
                     identifier: email,
                     password: password
-                }).then(() => router.push("/dashboard"))
+                }, { withCredentials: true, })
+                setUser(data.data.user)
+                if (data.success) router.push("/")
             }
         } catch (error) {
             const err = error as AxiosError<any>

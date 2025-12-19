@@ -162,7 +162,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { accessToken, refreshToken: newrefreshToken },
+                    { user, accessToken, refreshToken: newrefreshToken },
                     "access token refreshed successfully"
                 )
             )
@@ -193,11 +193,61 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
     }
 })
 
-const getUsersWithPagination = asyncHandler(async (req, res) => {
-    const offset = req.body.offset
+const getTheCurentUserProfileDetails = asyncHandler(async (req, res) => {
+    const incomingRefreshToken =
+        req.cookies.refreshToken || req.body.refreshToken
 
-    if (!offset && Number.isInteger(offset)) {
-        throw new ApiError(404, "offset id required and its must be a Intiger")
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Not authenticated")
+    }
+
+    let decodedToken
+    try {
+        decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRSH_TOKEN_SECRET
+        )
+    } catch {
+        throw new ApiError(401, "Invalid refresh token")
+    }
+
+    const user = await getUserByIdThroughRedisCache(decodedToken.id)
+
+    if (!user) {
+        throw new ApiError(401, "User not found")
+    }
+
+    const redisRefreshToken = await redis.get(`refresh:${decodedToken.id}`)
+
+    if (!redisRefreshToken || redisRefreshToken !== incomingRefreshToken) {
+        throw new ApiError(401, "Refresh token expired or reused")
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    }
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                { user },
+                "Authenticated"
+            )
+        )
+})
+
+const getUsersWithPagination = asyncHandler(async (req, res) => {
+    const offset = req.body?.offset || 0
+
+    if (!Number.isInteger(offset)) {
+        throw new ApiError(404, "offset must be a Intiger")
     }
 
     try {
@@ -211,6 +261,7 @@ const getUsersWithPagination = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, user, "50 Users List, shorted by Id"))
     } catch (error) {
+        console.log(error);
         throw new ApiError(500, error?.message || "Users List not found")
     }
 })
@@ -251,5 +302,6 @@ export {
     refreshAccessToken,
     getUserProfileDetails,
     getUsersWithPagination,
-    getUsersWithIdsInBulk
+    getUsersWithIdsInBulk,
+    getTheCurentUserProfileDetails
 }

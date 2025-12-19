@@ -14,7 +14,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         }
 
         const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-
         const user = await getUserByIdThroughRedisCache(decodedToken.id)
 
         if (!user) {

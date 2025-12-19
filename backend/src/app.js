@@ -21,6 +21,7 @@ import { errorHandler } from "./middlewares/error.middleware.js"
 
 //routs declaration
 app.use("/api/v1/users", userRouter)
+// app.use("/api/v1/message", messageRouter)
 
 app.use(errorHandler)
 

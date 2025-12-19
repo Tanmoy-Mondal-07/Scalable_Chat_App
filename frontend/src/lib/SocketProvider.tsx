@@ -2,6 +2,7 @@
 
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { useAuthStore } from "./authStore";
 
 interface SocketProviderProps {
   children?: React.ReactNode;
@@ -31,6 +32,7 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
+  const user = useAuthStore((state) => state.user);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<IncomingMessage[]>([]);
 
@@ -47,19 +49,21 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const _socket = io('http://localhost:8000', {
-      withCredentials: true,
-    });
+    if (user) {
+      const _socket = io('http://localhost:8000', {
+        withCredentials: true,
+      });
 
-    _socket.on("private:message", onPrivateMessage);
+      _socket.on("private:message", onPrivateMessage);
 
-    setSocket(_socket);
+      setSocket(_socket);
 
-    return () => {
-      _socket.off("private:message", onPrivateMessage);
-      _socket.disconnect();
-    };
-  }, [onPrivateMessage]);
+      return () => {
+        _socket.off("private:message", onPrivateMessage);
+        _socket.disconnect();
+      };
+    }
+  }, [onPrivateMessage, user]);
 
   return (
     <SocketContext.Provider value={{ sendMessage, messages }}>

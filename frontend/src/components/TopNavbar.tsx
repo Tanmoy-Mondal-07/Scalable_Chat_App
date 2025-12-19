@@ -26,11 +26,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes"
 import { SidebarTrigger } from "./ui/sidebar";
-import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/lib/api";
+import axios from "axios";
+import { useAuthStore } from "@/lib/authStore";
 
 export default function TopNavbar() {
+  const logedInUser = useAuthStore((state) => state.user);
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false);
   const { setTheme, resolvedTheme, systemTheme } = useTheme()
@@ -43,14 +45,32 @@ export default function TopNavbar() {
     }
   }
 
+  useEffect(() => {
+    async function syncAuth() {
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_API}/users/getcurrentuser`,
+          {},
+          { withCredentials: true }
+        )
+        // console.log("responce loging", response);
+        useAuthStore.getState().setUser(response.data.data.user)
+      } catch {
+        useAuthStore.getState().clearUser()
+      }
+    }
+
+    syncAuth()
+  }, [])
+
+
   async function logoutuser() {
     // setLoading(true)
     try {
       const { data } = await axiosInstance.post('/users/logout')
-      if (data.success) router.push("/")
+      useAuthStore.getState().clearUser()
+      if (data.success) router.push("/signin")
     } catch (error) {
-      const err = error as AxiosError<any>
-      console.error(err)
       // setErrors((prev) => ({ ...prev, password: err.response?.data.message || err.message || "unknown error" }))
     } finally {
       // setLoading(false)
@@ -63,14 +83,6 @@ export default function TopNavbar() {
     { name: "Orders", href: "/orders" },
     { name: "Analytics", href: "/analytics" },
   ];
-
-  // Mock User Data
-  const user = {
-    name: "Jane Doe",
-    email: "jane@photography.com",
-    role: "Admin",
-    avatarUrl: ""
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -131,12 +143,14 @@ export default function TopNavbar() {
             </Button> */}
 
             {/* User Profile Dropdown */}
-            <DropdownMenu>
+            {!!logedInUser && <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-border transition-all">
-                  <Avatar className="h-9 w-9 border border-border">
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                    <AvatarFallback>JD</AvatarFallback>
+                  <Avatar className="h-10 w-10 border-2 border-background shadow-sm group-hover:scale-105 transition-transform">
+                    {logedInUser.avatar_url ? <AvatarImage src={logedInUser.avatar_url} alt={logedInUser.username} />
+                      : <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        {logedInUser.username.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>}
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -144,14 +158,14 @@ export default function TopNavbar() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{logedInUser.username}</p>
                       {/* Role Badge */}
-                      <Badge variant="secondary" className="text-[10px] h-5 px-1.5 uppercase tracking-wider">
+                      {/* <Badge variant="secondary" className="text-[10px] h-5 px-1.5 uppercase tracking-wider">
                         {user.role}
-                      </Badge>
+                      </Badge> */}
                     </div>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {logedInUser.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -172,7 +186,7 @@ export default function TopNavbar() {
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu>}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -215,18 +229,20 @@ export default function TopNavbar() {
             </div>
 
             {/* Mobile User Section (redundancy for better UX on mobile) */}
-            <div className="border-t pt-4">
+            {!!logedInUser && <div className="border-t pt-4">
               <div className="flex items-center gap-3 px-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatarUrl} />
-                  <AvatarFallback>JD</AvatarFallback>
+                <Avatar className="h-10 w-10 border-2 border-background shadow-sm group-hover:scale-105 transition-transform">
+                  {logedInUser.avatar_url ? <AvatarImage src={logedInUser.avatar_url} alt={logedInUser.username} />
+                    : <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {logedInUser.username.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>}
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">{user.name}</span>
-                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                  <span className="text-sm font-medium">{logedInUser.username}</span>
+                  <span className="text-xs text-muted-foreground">{logedInUser.username}</span>
                 </div>
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       )}
