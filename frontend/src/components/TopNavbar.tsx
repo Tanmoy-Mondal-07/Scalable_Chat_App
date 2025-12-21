@@ -116,22 +116,22 @@ export default function TopNavbar() {
         <div className="flex h-16 items-center justify-between gap-4">
 
           {/* LEFT: Logo/Sidebar */}
-          <div className="flex items-center gap-2 shrink-0">
+          {!!logedInUser && <div className="flex items-center gap-2 shrink-0">
             <div className="bg-primary/10 p-1.5 rounded-lg">
               <SidebarTrigger className="h-5 w-5" />
             </div>
-          </div>
+          </div>}
 
           {/* CENTER: Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.name}
                 href={item.href}
                 className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-full transition-all"
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
           </div>
 

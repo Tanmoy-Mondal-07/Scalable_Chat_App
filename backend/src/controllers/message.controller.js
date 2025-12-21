@@ -3,33 +3,22 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { fetchMessagesByConversationId, fetchTopConversationsByUserId } from "../models/message.model.js";
 import { fetchUsersInBulkById } from "../models/user.model.js";
+import uuidFromUsers from "../utils/UUIDCreater.js";
 
-// const getOrCreateConversation = asyncHandler(async (req, res) => {
-//     const { receiverId } = req.body;
-//     const senderId = req.user.id
+const getMessages = asyncHandler(async (req, res) => {
+    const { receiverId } = req.body;
+    const senderId = req.user.id
 
-//     if (!senderId || !receiverId) {
-//         throw new ApiError(400, "Sender ID and Receiver ID are required");
-//     }
+    if (!senderId || !receiverId) {
+        throw new ApiError(400, "Sender ID and Receiver ID are required");
+    }
 
-//     const existingConnection = await fetchConversationByUsers({ senderId, receiverId });
+    const Messages = await fetchMessagesByConversationId({ conversation_id: uuidFromUsers(senderId, receiverId) });
 
-//     if (existingConnection) {
-//         return res
-//             .status(200)
-//             .json(new ApiResponse(200, existingConnection, "Conversation retrieved successfully"));
-//     }
-
-//     const newConnection = await createConversationsInfoCassandra({ senderId, receiverId });
-
-//     if (!newConnection) {
-//         throw new ApiError(500, "Something went wrong while creating the conversation");
-//     }
-
-//     return res
-//         .status(201)
-//         .json(new ApiResponse(201, newConnection, "New conversation created successfully"));
-// });
+    return res
+        .status(201)
+        .json(new ApiResponse(201, Messages, "Messages found"));
+});
 
 const fetchMessagesByConversation = asyncHandler(async (req, res) => {
     const { conversation_id } = req.body;
@@ -90,6 +79,6 @@ const fetchCurrentUserConversation = asyncHandler(async (req, res) => {
 });
 
 export {
-    fetchMessagesByConversation,
+    getMessages,
     fetchCurrentUserConversation
 };

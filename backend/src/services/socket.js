@@ -54,7 +54,8 @@ class SocketService {
                 }
                 console.log(message);
                 uploadMessage({ ...message, receiverId: payload.toUserId })
-                this.io.to(payload.toUserId).emit("private:message", message);
+                this.io.to(payload.toUserId).emit("private:message", message)
+                this.io.to(userId).emit("private:message", message);
             });
         });
 

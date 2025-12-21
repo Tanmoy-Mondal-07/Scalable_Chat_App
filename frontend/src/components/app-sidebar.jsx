@@ -44,7 +44,7 @@ export function AppSidebar() {
     } else setIsLoading(false)
   }, [user])
 
-  const filteredUsers = userList.filter(user =>
+  const filteredUsers = conversations.filter(user =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -78,7 +78,7 @@ export function AppSidebar() {
               {isLoading ? (
                 <div className="p-4 text-sm text-muted-foreground animate-pulse">Loading users...</div>
               ) : (
-                conversations.map((conversation) => (
+                filteredUsers.map((conversation) => (
                   <SidebarMenuItem key={conversation.conversation_id} >
                     <SidebarMenuButton
                       asChild

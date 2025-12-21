@@ -109,11 +109,6 @@ async function fetchMessagesByConversationId({
     );
 
     return result.rows
-
-    // return {
-    //     messages: result.rows,
-    //     pagingState: result.pageState ?? null,
-    // };
 }
 
 async function fetchMessagesByConversationIds({
@@ -146,7 +141,7 @@ async function fetchTopConversationsByUserId({ userId }) {
       SELECT peer_id, conversation_id, last_message_at, last_message
       FROM chat.conversations
       WHERE participant_id = ?
-      LIMIT 50
+      LIMIT 500
     `;
     const result = await client.execute(
         query,
