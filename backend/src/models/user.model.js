@@ -87,6 +87,18 @@ export async function getUserByEmailIdOrUsername(email, username) {
     return responce.rows[0]
 }
 
+export async function getUserByUsername(username) {
+    const response = await pool.query(
+        `SELECT *
+       FROM users
+       WHERE username ILIKE $1
+       LIMIT 10`,
+        [`%${username}%`]
+    );
+
+    return response.rows;
+}
+
 export async function getUserByIdentifier(identifier) {
     const responce = await pool.query("SELECT * FROM users where email = $1 OR username = $1 LIMIT 1", [identifier])
     return responce.rows[0]

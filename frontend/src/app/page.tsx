@@ -8,7 +8,7 @@ export default function Page() {
 
   return (
     <div>
-      <div>
+      {/* <div>
         <input
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message..."
@@ -26,7 +26,7 @@ export default function Page() {
         {messages.map((e, index) => (
           <li key={index}>{e.message}</li>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }

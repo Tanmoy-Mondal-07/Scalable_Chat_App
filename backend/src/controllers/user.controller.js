@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from 'jsonwebtoken'
-import { createUser, encriptPassword, fetchUsersInBulkById, generateAccessToken, generateRefreshToken, getAllUsers, getUserByEmailIdOrUsername, getUserById, getUserByIdentifier, getUserByIdThroughRedisCache, isPasswordCorrect } from "../models/user.model.js";
+import { createUser, encriptPassword, fetchUsersInBulkById, generateAccessToken, generateRefreshToken, getAllUsers, getUserByEmailIdOrUsername, getUserById, getUserByIdentifier, getUserByIdThroughRedisCache, getUserByUsername, isPasswordCorrect } from "../models/user.model.js";
 import redis from "../db/Redis.client.js";
 
 
@@ -123,73 +123,66 @@ const logoutUser = asyncHandler(async (req, res) => {
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
-    console.log("token refreshed");
+    const incomingRefreshToken = req.cookies.refreshToken;
+
     if (!incomingRefreshToken) {
-        throw new ApiError(401, "unauthorized request")
+        throw new ApiError(401, "Unauthorized");
     }
 
-    try {
-        const decodedToken = jwt.verify(
-            incomingRefreshToken,
-            process.env.REFRSH_TOKEN_SECRET
-        )
+    const decoded = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRSH_TOKEN_SECRET
+    );
 
-        const user = await getUserByIdThroughRedisCache(decodedToken.id)
+    const redisToken = await redis.get(`refresh:${decoded.id}`);
 
-        if (!user) {
-            throw new ApiError(401, "invalid refresh token")
-        }
+    if (!redisToken || redisToken !== incomingRefreshToken) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
 
-        const redisRefreshToken = await redis.get(`refresh:${decodedToken.id}`)
+    const user = await getUserByIdThroughRedisCache(decoded.id);
 
-        if (incomingRefreshToken !== redisRefreshToken) {
-            throw new ApiError(401, "refresh token is expired or ushed")
-        }
+    const accessToken = await generateAccessToken(user);
 
-        const options = {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-        }
+    const cookieOptions = {
+        httpOnly: true,
+        // secure: false,
+        // sameSite: "lax",
+    };
 
-        const { accessToken, newrefreshToken } = await generateAccessAndRefreshTokens(user)
-
-        return res
-            .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newrefreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    { user, accessToken, refreshToken: newrefreshToken },
-                    "access token refreshed successfully"
-                )
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .json(
+            new ApiResponse(
+                200,
+                { user, accessToken },
+                "access token refreshed successfully"
             )
-    } catch (error) {
-        throw new ApiError(401, error?.message || "invalid refresh token")
-    }
-})
+        )
+});
 
-const getUserProfileDetails = asyncHandler(async (req, res) => {
-    const incomingUserId = req.body.id
+const getUserProfileDetailsByName = asyncHandler(async (req, res) => {
+    const username = req.body.username
 
-    if (!incomingUserId) {
-        throw new ApiError(404, "user id required")
+    if (!username) {
+        throw new ApiError(404, "user name is required")
     }
 
     try {
-        const user = await getUserByIdThroughRedisCache(decodedToken.id)
+        const users = await getUserByUsername(username)
 
-        if (!user) {
-            throw new ApiError(404, "invalid user Id")
+        if (users.length === 0) {
+            throw new ApiError(404, "no user found with this username")
         }
+
+        const filtredUsers = users.map(({ password_hash, email, ...filterdUser }) => filterdUser)
 
         return res
             .status(200)
-            .json(new ApiResponse(200, user, "User found"))
+            .json(new ApiResponse(200, filtredUsers, "Users found"))
     } catch (error) {
-        throw new ApiError(500, error?.message || "User not found")
+        throw new ApiError(500, error?.message || "server error")
     }
 })
 
@@ -266,30 +259,25 @@ const getUsersWithPagination = asyncHandler(async (req, res) => {
     }
 })
 
-const getUsersWithIdsInBulk = asyncHandler(async (req, res) => {
-    const idarray = req.body.idarray
+const getUsersById = asyncHandler(async (req, res) => {
+    const id = req.body.id
 
-    if (!idarray && idarray.length !== 0) {
-        throw new ApiError(404, "id array is required")
+    if (!id) {
+        throw new ApiError(404, "id is required")
     }
 
-    const ids = idarray
-        .filter(id =>
-            Number.isInteger(id) ||
-            (typeof id === "string" && /^\d+$/.test(id))
-        )
-        .map(String)
-
     try {
-        const user = await fetchUsersInBulkById(ids)
+        const user = await getUserById(id)
 
-        if (!user || user.length === 0) {
-            throw new ApiError(404, "invalid user Ids")
+        if (!user) {
+            throw new ApiError(404, "invalid user Id")
         }
+
+        const { password_hash, email, ...filterdUser } = user
 
         return res
             .status(200)
-            .json(new ApiResponse(200, user, "Users List"))
+            .json(new ApiResponse(200, filterdUser, "Users List"))
     } catch (error) {
         throw new ApiError(500, error?.message || "Users List not found")
     }
@@ -300,8 +288,8 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    getUserProfileDetails,
+    getUserProfileDetailsByName,
     getUsersWithPagination,
-    getUsersWithIdsInBulk,
+    getUsersById,
     getTheCurentUserProfileDetails
 }

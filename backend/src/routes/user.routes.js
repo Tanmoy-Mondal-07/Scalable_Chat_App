@@ -1,7 +1,8 @@
 import { Router } from "express";
 import {
     getTheCurentUserProfileDetails,
-    getUsersWithIdsInBulk,
+    getUserProfileDetailsByName,
+    getUsersById,
     getUsersWithPagination,
     loginUser, logoutUser,
     refreshAccessToken, registerUser,
@@ -24,9 +25,10 @@ router.route("/register").post(
 router.route('/login').post(loginUser)
 router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token").post(refreshAccessToken)
-router.route("/getusersbyids").post(getUsersWithIdsInBulk)
+router.route("/getuserbyid").post(getUsersById)
 router.route("/getallusers").post(getUsersWithPagination)
 router.route("/getcurrentuser").post(getTheCurentUserProfileDetails)
+router.route("/searchusers").post(getUserProfileDetailsByName)
 
 // router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatair)
 

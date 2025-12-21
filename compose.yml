@@ -98,28 +98,28 @@ services:
     networks:
       - chat-app
 
-  redis_insight:
-    image: redis/redisinsight:latest
-    container_name: redis_insight
-    ports:
-      - "5540:5540"
-    networks:
-      - chat-app
+  # redis_insight:
+  #   image: redis/redisinsight:latest
+  #   container_name: redis_insight
+  #   ports:
+  #     - "5540:5540"
+  #   networks:
+  #     - chat-app
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    # restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: clash@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: clash
-    ports:
-      - "5000:80"
-    depends_on:
-      - postgres
-    networks:
-      - chat-app
-    attach: false
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   # restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: clash@gmail.com
+  #     PGADMIN_DEFAULT_PASSWORD: clash
+  #   ports:
+  #     - "5000:80"
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - chat-app
+  #   attach: false
 
 networks:
   chat-app:

@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuthStore } from "./authStore";
+
+export type Message = {
+  conversation_id: string;
+  message_ts: any;
+  message_id: string;
+  sender_id: string;
+  content: string;
+};
 
 interface SocketProviderProps {
   children?: React.ReactNode;
 }
-
-type IncomingMessage = {
-  from: string;
-  message: string;
-};
 
 type SendMessagePayload = {
   toUserId: string;
@@ -20,7 +28,9 @@ type SendMessagePayload = {
 
 interface ISocketContext {
   sendMessage: (payload: SendMessagePayload) => void;
-  messages: IncomingMessage[];
+  messages: Message[];
+  resetMessages: () => void;
+  setMessages: (msgs: Message[]) => void;
 }
 
 const SocketContext = React.createContext<ISocketContext | null>(null);
@@ -33,40 +43,45 @@ export const useSocket = () => {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const user = useAuthStore((state) => state.user);
+
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<IncomingMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const resetMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
 
   const sendMessage = useCallback(
     ({ toUserId, message }: SendMessagePayload) => {
-      console.log(toUserId, message);
       socket?.emit("private:message", { toUserId, message });
     },
     [socket]
   );
 
-  const onPrivateMessage = useCallback((msg: IncomingMessage) => {
+  const onPrivateMessage = useCallback((msg: Message) => {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
   useEffect(() => {
-    if (user) {
-      const _socket = io('http://localhost:8000', {
-        withCredentials: true,
-      });
+    if (!user) return;
 
-      _socket.on("private:message", onPrivateMessage);
+    const _socket = io("http://localhost:8000", {
+      withCredentials: true,
+    });
 
-      setSocket(_socket);
+    _socket.on("private:message", onPrivateMessage);
+    setSocket(_socket);
 
-      return () => {
-        _socket.off("private:message", onPrivateMessage);
-        _socket.disconnect();
-      };
-    }
-  }, [onPrivateMessage, user]);
+    return () => {
+      _socket.off("private:message", onPrivateMessage);
+      _socket.disconnect();
+    };
+  }, [user, onPrivateMessage]);
 
   return (
-    <SocketContext.Provider value={{ sendMessage, messages }}>
+    <SocketContext.Provider
+      value={{ sendMessage, messages, resetMessages, setMessages }}
+    >
       {children}
     </SocketContext.Provider>
   );

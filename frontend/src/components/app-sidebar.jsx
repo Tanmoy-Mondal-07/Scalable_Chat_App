@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { Search, MessageSquare, Users, Circle } from "lucide-react"
 import { axiosInstance } from "@/lib/api"
-
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { useAuthStore } from "@/lib/authStore"
+import Link from "next/link"
 
 export function AppSidebar() {
   const user = useAuthStore((state) => state.user);
@@ -26,19 +25,23 @@ export function AppSidebar() {
   const [userList, setUserList] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [conversations, setConversations] = useState([])
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await axiosInstance.post('/users/getallusers')
-        // console.log(data.data[0]);
-        setUserList(data.data)
-      } catch (error) {
-        console.error("Failed to fetch users:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    })()
+    if (user) {
+      (async () => {
+        try {
+          const responce = await axiosInstance.post('/chat/current-user')
+          setConversations(responce.data.data)
+          const res = await axiosInstance.post('/users/getallusers')
+          setUserList(res.data.data)
+        } catch (error) {
+          console.error("Failed to fetch users:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      })()
+    } else setIsLoading(false)
   }, [user])
 
   const filteredUsers = userList.filter(user =>
@@ -75,30 +78,29 @@ export function AppSidebar() {
               {isLoading ? (
                 <div className="p-4 text-sm text-muted-foreground animate-pulse">Loading users...</div>
               ) : (
-                filteredUsers.map((user) => (
-                  <SidebarMenuItem key={user.id}>
+                conversations.map((conversation) => (
+                  <SidebarMenuItem key={conversation.conversation_id} >
                     <SidebarMenuButton
                       asChild
                       className="h-14 px-4 rounded-xl hover:bg-accent/50 transition-all duration-200 group"
                     >
-                      <Link href={`/message/${user.id}`} className="flex items-center gap-3">
+                      <Link href={`/message/${conversation.peer_id}`} className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-10 w-10 border-2 border-background shadow-sm group-hover:scale-105 transition-transform">
-                            <AvatarImage src={user.avatar_url} alt={user.username} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {user.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
+                            {conversation.avatar_url ? <AvatarImage src={conversation.avatar_url} alt={conversation.username} />
+                              : <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                {conversation.username.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>}
                           </Avatar>
-                          {/* Online Indicator Mockup */}
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-background rounded-full" />
                         </div>
 
                         <div className="flex flex-col items-start overflow-hidden">
                           <span className="font-semibold text-sm text-foreground/90 truncate w-full">
-                            {user.username}
+                            {conversation.username}
                           </span>
                           <span className="text-xs text-muted-foreground truncate w-full">
-                            Click to send a message
+                            {conversation.last_message}
                           </span>
                         </div>
                       </Link>

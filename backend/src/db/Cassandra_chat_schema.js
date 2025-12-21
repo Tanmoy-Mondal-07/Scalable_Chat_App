@@ -23,28 +23,30 @@ WITH CLUSTERING ORDER BY (message_ts DESC, message_id DESC);
 const CREATE_CONVERSATIONS_TABLE = `
 CREATE TABLE IF NOT EXISTS chat.conversations (
   participant_id UUID,
+  peer_id UUID,
   last_message_at TIMESTAMP,
   conversation_id UUID,
+  last_message TEXT,
   PRIMARY KEY ((participant_id), last_message_at, conversation_id)
 )
 WITH CLUSTERING ORDER BY (last_message_at DESC, conversation_id DESC);
 `;
 
 export default async function initCassandra() {
-    try {
-        await client.connect();
-        // console.log("✅ Cassandra connected");
+  try {
+    await client.connect();
+    // console.log("✅ Cassandra connected");
 
-        await client.execute(CREATE_KEYSPACE);
-        client.keyspace = "chat";
+    await client.execute(CREATE_KEYSPACE);
+    client.keyspace = "chat";
 
-        await client.execute(CREATE_MESSAGES_TABLE);
-        await client.execute(CREATE_CONVERSATIONS_TABLE);
-        console.log("✅ Cassandra Table created");
+    await client.execute(CREATE_MESSAGES_TABLE);
+    await client.execute(CREATE_CONVERSATIONS_TABLE);
+    console.log("✅ Cassandra Table created");
 
-    } catch (error) {
-        console.log("❌ Cassandra connection fail ");
-        console.log(error);
-        process.exit(1)
-    }
+  } catch (error) {
+    console.log("❌ Cassandra connection fail ");
+    console.log(error);
+    process.exit(1)
+  }
 }

@@ -3,7 +3,9 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import socketAuth from "../middlewares/socket.middleware.js";
 import redis from "../db/Redis.client.js";
 // import { producer } from "../db/Kafka.client.js";
-// import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "uuid";
+import { uploadMessage } from "../models/message.model.js";
+import uuidFromUsers from "../utils/UUIDCreater.js";
 
 class SocketService {
     constructor(httpServer) {
@@ -42,12 +44,17 @@ class SocketService {
             socket.join(userId);
             console.log(`User ${userId} connected`);
 
-            socket.on("private:message", ({ toUserId, message }) => {
-                // console.log(toUserId, message);
-                this.io.to(toUserId).emit("private:message", {
-                    from: userId,
-                    message,
-                });
+            socket.on("private:message", (payload) => {
+                const message = {
+                    conversation_id: uuidFromUsers(userId, payload.toUserId),
+                    message_ts: Date.now(),
+                    message_id: uuid(),
+                    sender_id: userId,
+                    content: payload.message
+                }
+                console.log(message);
+                uploadMessage({ ...message, receiverId: payload.toUserId })
+                this.io.to(payload.toUserId).emit("private:message", message);
             });
         });
 
