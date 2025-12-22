@@ -2,10 +2,10 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import socketAuth from "../middlewares/socket.middleware.js";
 import redis from "../db/Redis.client.js";
-// import { producer } from "../db/Kafka.client.js";
+import { producer } from "../db/Kafka.client.js";
 import { v4 as uuid } from "uuid";
-import { uploadMessage } from "../models/message.model.js";
 import uuidFromUsers from "../utils/UUIDCreater.js";
+import { startMessageDeliveryConsumer } from "../consumers/delivery.js";
 
 class SocketService {
     constructor(httpServer) {
@@ -21,6 +21,7 @@ class SocketService {
 
         this.io.adapter(createAdapter(pubClient, subClient));
         this.io.use(socketAuth);
+        startMessageDeliveryConsumer(this.io);
         this.initListeners();
 
         pubClient.on("connect", () => console.log("pubClient connecting..."));
@@ -44,44 +45,40 @@ class SocketService {
             socket.join(userId);
             console.log(`User ${userId} connected`);
 
-            socket.on("private:message", (payload) => {
+            socket.on("private:message", async (payload) => {
                 const message = {
                     conversation_id: uuidFromUsers(userId, payload.toUserId),
                     message_ts: Date.now(),
                     message_id: uuid(),
                     sender_id: userId,
-                    content: payload.message
-                }
-                console.log(message);
-                uploadMessage({ ...message, receiverId: payload.toUserId })
-                this.io.to(payload.toUserId).emit("private:message", message)
-                this.io.to(userId).emit("private:message", message);
+                    content: payload.message,
+                    receiverId: payload.toUserId
+                };
+
+                await producer.send({
+                    topic: "chat_messages",
+                    messages: [{
+                        key: message.conversation_id,
+                        value: JSON.stringify(message)
+                    }]
+                });
             });
+
+
+            // socket.on("private:message", (payload) => {
+            //     const message = {
+            //         conversation_id: uuidFromUsers(userId, payload.toUserId),
+            //         message_ts: Date.now(),
+            //         message_id: uuid(),
+            //         sender_id: userId,
+            //         content: payload.message
+            //     }
+            //     console.log(message);
+            //     uploadMessage({ ...message, receiverId: payload.toUserId })
+            //     this.io.to(payload.toUserId).emit("private:message", message)
+            //     this.io.to(userId).emit("private:message", message);
+            // });
         });
-
-        // this.io.on("connection", (socket) => {
-        //     socket.on("send_message", async (payload) => {
-        //         const message = {
-        //             message_id: uuid(),
-        //             conversation_id: payload.conversationId,
-        //             sender_id: socket.id,
-        //             content: payload.text,
-        //             ts: Date.now()
-        //         };
-
-        //         await producer.send({
-        //             topic: "chat_messages",
-        //             messages: [
-        //                 {
-        //                     key: message.conversation_id, // ORDERING GUARANTEE
-        //                     value: JSON.stringify(message)
-        //                 }
-        //             ]
-        //         });
-
-        //         socket.emit("ack", { message_id: message.message_id });
-        //     });
-        // });
     }
 }
 
