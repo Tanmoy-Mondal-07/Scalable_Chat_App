@@ -1,6 +1,4 @@
-import uuidFromUsers from "../utils/UUIDCreater.js";
 import client from "../db/cassandra.client.js";
-import { types } from "cassandra-driver";
 
 // async function createConversationsInfoCassandra({ senderId, receiverId, timestamps = Date.now() }) {
 //     const conversationId = uuidFromUsers(senderId, receiverId)

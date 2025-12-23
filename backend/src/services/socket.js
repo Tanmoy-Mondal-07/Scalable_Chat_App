@@ -6,6 +6,7 @@ import { producer } from "../db/Kafka.client.js";
 import { v4 as uuid } from "uuid";
 import uuidFromUsers from "../utils/UUIDCreater.js";
 import { startMessageDeliveryConsumer } from "../consumers/delivery.js";
+import { socketRateLimit } from "./socketRateLimit.js";
 
 class SocketService {
     constructor(httpServer) {
@@ -33,19 +34,32 @@ class SocketService {
         subClient.on("error", (err) => console.error("subClient error:", err));
         subClient.on("end", () => console.warn("subClient connection closed"));
         subClient.on("reconnecting", () => console.log("subClient reconnecting..."));
-
-        subClient.on("subscribe", (channel, count) => { console.log(`✅ Subscribed to ${channel} (${count} subscriptions total)`); });
-        subClient.on("message", (channel, message) => { console.log(`📥 Message on ${channel}: ${message}`); });
     }
 
     initListeners() {
         this.io.on("connection", (socket) => {
             const userId = socket.user.id;
+            const ip = socket.handshake.headers["x-forwarded-for"]?.split(",")[0] || socket.handshake.address;
 
             socket.join(userId);
             console.log(`User ${userId} connected`);
 
-            socket.on("private:message", async (payload) => {
+            socket.on("private:message", async (payload, ack) => {
+
+                const allowed = await socketRateLimit({
+                    key: userId ? `user:${userId}` : `ip:${ip}`,
+                    limit: 10,
+                    windowSec: 1,
+                });
+
+                if (!allowed) {
+                    return ack?.({
+                        ok: false,
+                        error: "RATE_LIMIT",
+                        message: "Too many messages",
+                    });
+                }
+
                 const message = {
                     conversation_id: uuidFromUsers(userId, payload.toUserId),
                     message_ts: Date.now(),
@@ -62,8 +76,8 @@ class SocketService {
                         value: JSON.stringify(message)
                     }]
                 });
+                ack?.({ ok: true });
             });
-
 
             // socket.on("private:message", (payload) => {
             //     const message = {
