@@ -1,4 +1,5 @@
 import { kafka, producer } from "../db/Kafka.client.js";
+import msgpack from "msgpack-lite";
 
 export async function startFanoutConsumer() {
     const consumer = kafka.consumer({
@@ -10,21 +11,19 @@ export async function startFanoutConsumer() {
 
     await consumer.run({
         eachMessage: async ({ message }) => {
-            const msg = JSON.parse(message.value.toString());
+            const msg = msgpack.decode(message.value);
 
-            // 1️⃣ Get participants (DB or Redis)
             // const participants = await getParticipants(msg.conversation_id);
             const participants = (msg.sender_id === msg.receiverId) ? [msg.sender_id] : [msg.sender_id, msg.receiverId]
 
-            // 2️⃣ Produce per-user delivery messages
             await producer.send({
                 topic: "chat_delivery",
                 messages: participants.map(userId => ({
                     key: userId,
-                    value: JSON.stringify({
+                    value: msgpack.encode({
                         ...msg,
-                        recipient_id: userId
-                    })
+                        recipient_id: userId,
+                    }),
                 }))
             });
         }

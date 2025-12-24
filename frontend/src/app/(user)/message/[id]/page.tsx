@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, User, MoreVertical, Paperclip } from "lucide-react";
 
@@ -13,7 +13,9 @@ import { useAuthStore } from "@/lib/authStore";
 import { useSocket } from "@/lib/SocketProvider";
 
 function Page() {
+  const router = useRouter()
   const user = useAuthStore((state) => state.user);
+  if (!user) router.push("/")
   const params = useParams<{ id: string }>();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -60,27 +62,7 @@ function Page() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
-      {/* <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 bg-background/50 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Avatar className="h-10 w-10 border border-border/50">
-              <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                <User size={18} />
-              </AvatarFallback>
-            </Avatar>
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold tracking-tight">Support Chat</h2>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Active Now</p>
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground rounded-full">
-          <MoreVertical size={20} />
-        </Button>
-      </div> */}
 
-      {/* MESSAGES AREA */}
       <ScrollArea className="flex-1 px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {loading ? (

@@ -1,7 +1,7 @@
 import cassandra from "cassandra-driver";
 
 const client = new cassandra.Client({
-  contactPoints: ["127.0.0.1"],
+  contactPoints: [process.env.CASSANDRA_DB],
   localDataCenter: "dc1",
   credentials: {
     username: "cassandra",

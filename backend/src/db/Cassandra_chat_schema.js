@@ -35,7 +35,6 @@ WITH CLUSTERING ORDER BY (last_message_at DESC, conversation_id DESC);
 export default async function initCassandra() {
   try {
     await client.connect();
-    // console.log("✅ Cassandra connected");
 
     await client.execute(CREATE_KEYSPACE);
     client.keyspace = "chat";

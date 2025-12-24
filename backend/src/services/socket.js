@@ -7,6 +7,7 @@ import { v4 as uuid } from "uuid";
 import uuidFromUsers from "../utils/UUIDCreater.js";
 import { startMessageDeliveryConsumer } from "../consumers/delivery.js";
 import { socketRateLimit } from "./socketRateLimit.js";
+import msgpack from "msgpack-lite";
 
 class SocketService {
     constructor(httpServer) {
@@ -44,7 +45,7 @@ class SocketService {
             socket.join(userId);
             console.log(`User ${userId} connected`);
 
-            socket.on("private:message", async (payload, ack) => {
+            socket.on("private:message", async (buffer, ack) => {
 
                 const allowed = await socketRateLimit({
                     key: userId ? `user:${userId}` : `ip:${ip}`,
@@ -60,6 +61,7 @@ class SocketService {
                     });
                 }
 
+                const payload = msgpack.decode(buffer);
                 const message = {
                     conversation_id: uuidFromUsers(userId, payload.toUserId),
                     message_ts: Date.now(),
@@ -73,7 +75,7 @@ class SocketService {
                     topic: "chat_messages",
                     messages: [{
                         key: message.conversation_id,
-                        value: JSON.stringify(message)
+                        value: msgpack.encode(message)
                     }]
                 });
                 ack?.({ ok: true });

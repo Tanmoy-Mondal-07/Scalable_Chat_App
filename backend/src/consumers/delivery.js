@@ -1,4 +1,5 @@
 import { kafka } from "../db/Kafka.client.js";
+import msgpack from "msgpack-lite";
 
 export async function startMessageDeliveryConsumer(io) {
     const consumer = kafka.consumer({
@@ -10,7 +11,7 @@ export async function startMessageDeliveryConsumer(io) {
 
     await consumer.run({
         eachMessage: async ({ message }) => {
-            const msg = JSON.parse(message.value.toString());
+            const msg = msgpack.decode(message.value);
             io.to(msg.recipient_id).emit("private:message", msg);
         }
     });

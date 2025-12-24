@@ -1,5 +1,6 @@
 import { kafka } from "../db/Kafka.client.js";
 import { uploadMessage } from "../models/message.model.js";
+import msgpack from "msgpack-lite";
 
 export async function startPersistenceConsumer() {
     const consumer = kafka.consumer({
@@ -11,7 +12,7 @@ export async function startPersistenceConsumer() {
 
     await consumer.run({
         eachMessage: async ({ message }) => {
-            const msg = JSON.parse(message.value.toString());
+            const msg = msgpack.decode(message.value);
             await uploadMessage(msg);
         }
     });

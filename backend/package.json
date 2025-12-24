@@ -27,6 +27,7 @@
     "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
+    "msgpack-lite": "^0.1.26",
     "multer": "^1.4.5-lts.2",
     "pg": "^8.16.3",
     "rate-limit-redis": "^4.3.1",

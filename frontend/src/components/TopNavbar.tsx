@@ -38,7 +38,7 @@ export default function TopNavbar() {
     async function syncAuth() {
       try {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_API}/users/getcurrentuser`,
+          process.env.NEXT_PUBLIC_BACKEND_API ? `${process.env.NEXT_PUBLIC_BACKEND_API}/api/v1/users/getcurrentuser` : "/api/v1/users/getcurrentuser",
           {},
           { withCredentials: true }
         )

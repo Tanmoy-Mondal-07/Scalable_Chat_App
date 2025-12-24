@@ -1,8 +1,10 @@
+"use client";
+
 import axios from "axios";
 import { useAuthStore } from "./authStore";
 
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_API,
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_API ? `${process.env.NEXT_PUBLIC_BACKEND_API}/api/v1` : "/api/v1",
   withCredentials: true,
 });
 
@@ -26,7 +28,7 @@ axiosInstance.interceptors.response.use(
           refreshPromise = axiosInstance
             .post("/users/refresh-token")
             .then((res) => {
-                console.log(res);
+              console.log(res);
               useAuthStore.getState().setUser(res.data.data.user);
               return res;
             })

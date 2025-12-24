@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuthStore } from "./authStore";
+import msgpack from "msgpack-lite";
 
 export type Message = {
   conversation_id: string;
@@ -53,7 +54,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   const sendMessage = useCallback(
     ({ toUserId, message }: SendMessagePayload) => {
-      socket?.emit("private:message", { toUserId, message });
+      const payload = msgpack.encode({
+        toUserId,
+        message,
+      });
+      socket?.emit("private:message", payload);
     },
     [socket]
   );
@@ -65,9 +70,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    const _socket = io("http://localhost:8000", {
+    const _socket = process.env.NEXT_PUBLIC_BACKEND_API ? io(
+      `${process.env.NEXT_PUBLIC_BACKEND_API}`, {
       withCredentials: true,
-    });
+    }) : io()
 
     _socket.on("private:message", onPrivateMessage);
     setSocket(_socket);
