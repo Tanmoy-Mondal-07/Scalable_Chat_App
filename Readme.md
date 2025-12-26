@@ -21,7 +21,37 @@ The system runs locally behind **NGINX on `http://localhost:5000`** and uses mod
 * **Kafka** – Message streaming, fanout, persistence, and delivery pipelines
 * **MsgPack** – Efficient binary message serialization
 * **NGINX** – Reverse proxy and entry point
-
+```
+                                  ┌──────────────┐      ┌────────────┐
+                          ┌──────►│   Register   ├─────►│ PostgreSQL │
+                          │       └──────────────┘      └────────────┘
+                          │       ┌──────────────┐      ┌────────────┐      ┌────────────┐
+                          ├──────►│    Login     ├─────►│   Redis    ├─────►│ PostgreSQL │
+                          │       └──────────────┘      └────────────┘      └────────────┘
+    ┌────────┐   ┌───────┐│       ┌──────────────┐      ┌────────────┐
+    │ Client ├──►│       ││       │ RefreshToken ├─────►│   Redis    │
+    └────────┘   │       ││       └──────────────┘      └────────────┘
+    ┌────────┐   │ Nginx │├──────►┌──────────────┐      ┌────────────┐      ┌────────────┐
+    │ Client ├──►│  LB   ├┤       │ User Routes  ├─────►│   Redis    ├─────►│ PostgreSQL │
+    └────────┘   │       ││       └──────────────┘      └────────────┘      └────────────┘
+    ┌────────┐   │       ││
+    │ Client ├──►│       ││       ┌──────────────┐      ┌────────────┐      ┌────────────┐
+    └────────┘   └───────┘│       │ Message Send ├─────►│ Socket/Net ├─────►│   Kafka    │
+                          │       └──────┬───────┘      └────────────┘      └─────┬──────┘
+                          │              │ (MsgPack/RateLimit)                    │
+                          │              ▼                                     Fanout
+                          │       ┌──────────────┐      ┌────────────┐      ┌─────┴──────┐
+                          └──────►│ Message Get  ├─────►│ Cassandra  │◄─────┤ Persistence│
+                                  └──────────────┘      └────────────┘      └─────┬──────┘
+                                                                                  │
+                                                                            ┌─────▼──────┐
+                                                                            │ Delivery   │
+                                                                            └─────┬──────┘
+                                                                                  │
+                                                                            ┌─────▼──────┐
+                                                                            │   Client   │
+                                                                            └────────────┘
+```
 ### Databases & Caching
 
 * **PostgreSQL** – User accounts, authentication, and relational data
