@@ -58,94 +58,91 @@
 :root {
   --radius: 0.625rem;
 
-  /* Tokyo Night Day (Light mode alternative) */
-  --background: #f0f1f4;
-  --foreground: #3760bf;
+  --background: #f5f5f5;
+  --foreground: #1a1a1a;
 
-  --card: #e1e2e7;
-  --card-foreground: #3760bf;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
 
-  --popover: #e1e2e7;
-  --popover-foreground: #3760bf;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
 
-  --primary: #2e7de9;
+  --primary: #1a1a1a;
   --primary-foreground: #ffffff;
 
-  --secondary: #d1d5e3;
-  --secondary-foreground: #3760bf;
+  --secondary: #e6e6e6;
+  --secondary-foreground: #1a1a1a;
 
-  --muted: #d1d5e3;
-  --muted-foreground: #68709a;
+  --muted: #ededed;
+  --muted-foreground: #6b6b6b;
 
-  --accent: #d1d5e3;
-  --accent-foreground: #3760bf;
+  --accent: #e0e0e0;
+  --accent-foreground: #1a1a1a;
 
-  --destructive: #f7768e;
+  --destructive: #444444;
 
-  --border: #b4b5be;
-  --input: #b4b5be;
-  --ring: #2e7de9;
+  --border: #d0d0d0;
+  --input: #d0d0d0;
+  --ring: #1a1a1a;
 
-  --chart-1: #2e7de9;
-  --chart-2: #485e30;
-  --chart-3: #8c6c3e;
-  --chart-4: #5a4a78;
-  --chart-5: #f7768e;
+  --chart-1: #111111;
+  --chart-2: #333333;
+  --chart-3: #555555;
+  --chart-4: #777777;
+  --chart-5: #999999;
 
-  --sidebar: #f0f1f4;
-  --sidebar-foreground: #3760bf;
-  --sidebar-primary: #2e7de9;
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #1a1a1a;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #d1d5e3;
-  --sidebar-accent-foreground: #3760bf;
-  --sidebar-border: #b4b5be;
-  --sidebar-ring: #2e7de9;
+  --sidebar-accent: #e6e6e6;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #d0d0d0;
+  --sidebar-ring: #1a1a1a;
 }
 
 .dark {
-  /* 🌃 Tokyo Night Storm/Night */
-  --background: #1a1b26; /* Primary Background */
-  --foreground: #a9b1d6; /* Primary Foreground */
+  --background: #0b0b0b;
+  --foreground: #e5e5e5;
 
-  --card: #1f2335; /* Slightly lighter for depth */
-  --card-foreground: #c0caf5;
+  --card: #141414;
+  --card-foreground: #e5e5e5;
 
-  --popover: #1f2335;
-  --popover-foreground: #c0caf5;
+  --popover: #1a1a1a;
+  --popover-foreground: #e5e5e5;
 
-  --primary: #7aa2f7; /* Blue Normal */
-  --primary-foreground: #1a1b26;
+  --primary: #e5e5e5;
+  --primary-foreground: #0b0b0b;
 
-  --secondary: #24283b;
-  --secondary-foreground: #a9b1d6;
+  --secondary: #262626;
+  --secondary-foreground: #e5e5e5;
 
-  --muted: #24283b;
-  --muted-foreground: #565f89;
+  --muted: #1f1f1f;
+  --muted-foreground: #9a9a9a;
 
-  --accent: #292e42;
-  --accent-foreground: #c0caf5;
+  --accent: #2a2a2a;
+  --accent-foreground: #ffffff;
 
-  --destructive: #f7768e; /* Red Normal */
+  --destructive: #666666;
 
-  --border: rgba(41, 46, 66, 0.8);
-  --input: rgba(41, 46, 66, 0.8);
-  --ring: #7aa2f7;
+  --border: #2e2e2e;
+  --input: #2e2e2e;
+  --ring: #e5e5e5;
 
-  /* Terminal Chart Mapping */
-  --chart-1: #7aa2f7; /* Blue */
-  --chart-2: #9ece6a; /* Green */
-  --chart-3: #e0af68; /* Yellow */
-  --chart-4: #ad8ee6; /* Magenta */
-  --chart-5: #f7768e; /* Red */
+  --chart-1: #ffffff;
+  --chart-2: #cccccc;
+  --chart-3: #999999;
+  --chart-4: #666666;
+  --chart-5: #333333;
 
-  --sidebar: #16161e;
-  --sidebar-foreground: #a9b1d6;
-  --sidebar-primary: #7aa2f7;
-  --sidebar-primary-foreground: #1a1b26;
-  --sidebar-accent: #1f2335;
-  --sidebar-accent-foreground: #c0caf5;
-  --sidebar-border: #292e42;
-  --sidebar-ring: #7aa2f7;
+  --sidebar: #0f0f0f;
+  --sidebar-foreground: #e5e5e5;
+  --sidebar-primary: #e5e5e5;
+  --sidebar-primary-foreground: #0b0b0b;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2e2e2e;
+  --sidebar-ring: #e5e5e5;
 }
 
 @layer base {

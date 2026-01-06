@@ -18,7 +18,7 @@ const TerminalWindow = ({ children }: { children: React.ReactNode }) => (
           </div>
           <div className="ml-4 flex items-center gap-2 text-muted-foreground text-xs font-bold tracking-widest uppercase">
             <Terminal className="h-3 w-3" />
-            <span>debian — alacritty: Tokyo_Night_Storm_Theme</span>
+            <span>debian — alacritty: Monochrome_Theme</span>
           </div>
         </div>
         <div className="flex items-center gap-4 text-muted-foreground/50">
